@@ -1,40 +1,39 @@
 package main
 
 import (
-	"fmt"
-	"golang.org/x/net/context"
+	"github.com/r3inbowari/zlog"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"speedtest"
-	"time"
+	"speedtest/internal/location"
+)
+
+var (
+	list     = kingpin.Flag("list", "show a list of nearby servers depends on ip").Short('l').Bool()
+	download = kingpin.Flag("download", "select a server and download test only").Short('d').Bool()
+	upload   = kingpin.Flag("upload", "select a server and upload test only").Short('u').Bool()
 )
 
 func main() {
-	st := speedtest.InitSpeedTest(speedtest.Options{})
-	err := st.GetServerList()
-	if err != nil {
-		println(err.Error())
-	}
-	(*st.ServerList)[0].Connect()
-	s := (*st.ServerList)[0]
-	// ping
-	err = s.Ping()
-	if err != nil {
-		println(err.Error())
+	kingpin.Parse()
+	l := zlog.NewLogger()
+	l.SetScreen(true)
+	st := speedtest.InitSpeedTest(speedtest.Options{Log: &l.Logger, Location: location.HongKong})
+	st.Log.Info("Hi, SpeedTest!")
+
+	if *list {
+		st.CmdShowServerList()
+		return
 	}
 
-	// download
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
-	err = s.DownloadTest(ctx)
-	if err != nil {
-		println(err.Error())
+	if *download {
+		st.CmdDownloadTest()
+		return
 	}
-	// upload
-	ctx, _ = context.WithTimeout(context.Background(), time.Minute)
-	err = s.UploadTest(ctx)
-	if err != nil {
-		println(err.Error())
-	}
-	// print
-	fmt.Printf(s.Result.String())
 
-	defer func() { time.Sleep(time.Minute) }()
+	if *upload {
+		st.CmdUploadTest()
+		return
+	}
+
+	st.CmdSingleTest()
 }

@@ -13,7 +13,7 @@ func TestGetServerList(t *testing.T) {
 	if err != nil {
 		t.Fail()
 	}
-	if !assert.NotEqual(t, len(*st.ServerList), 0, "list len not be zero") {
+	if !assert.NotEqual(t, len(st.ServerList), 0, "list len not be zero") {
 		t.Fail()
 	}
 }
